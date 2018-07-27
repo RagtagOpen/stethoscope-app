@@ -3,11 +3,11 @@
   "version": "1.1.8",
   "private": true,
   "homepage": "./",
-  "author": "Netflix",
+  "author": "Ragtag",
   "description": "Local Stethoscope app",
   "main": "src/start.js",
   "build": {
-    "appId": "com.netflix.stethoscope-local",
+    "appId": "org.ragtag.stethoscope-local",
     "extends": null,
     "productName": "Stethoscope",
     "directories": {
