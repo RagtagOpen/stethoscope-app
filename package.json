@@ -43,7 +43,8 @@
         "src/*.js",
         "server.js",
         "schema.graphql"
-      ]
+      ],
+      "certificateSubjectName": "Ragtag LLC"
     },
     "nsis": {
       "perMachine": true
