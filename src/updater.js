@@ -9,7 +9,7 @@ const eventRegistration = {}
 // NOTE:
 // The actual updating only happens in prod - electron updates (due to Squirrel)
 // must be signed, so the process always fails in dev
-module.exports = function (env, mainWindow, log = console) {
+module.exports = function (env, mainWindow, log = console, OSQuery, server) {
   const { autoUpdater } = electronUpdater
   autoUpdater.autoDownload = false
 
@@ -28,6 +28,13 @@ module.exports = function (env, mainWindow, log = console) {
       if (attemptingUpdate) {
         dialog.showErrorBox('Error Updating: ', error ? err : 'unknown')
         attemptingUpdate = false
+      }
+    },
+    'before-quit-for-update': () => {
+      log.info('stopping osquery for app restart')
+      OSQuery.stop()
+      if (server && server.listening) {
+        server.close()
       }
     },
     'update-available': () => {
@@ -75,10 +82,11 @@ module.exports = function (env, mainWindow, log = console) {
         }
       })
     },
+    // TODO move this to ipc, remove mainWindow dependency
     'download-progress': (progressObj) => {
       mainWindow.webContents.send('download:progress', progressObj)
       // NOTE: uncomment to have download update progress displayed over app icon
-      // mainWindow.setProgressBar(progressObj.percent / 100)
+      mainWindow.setProgressBar(progressObj.percent / 100)
     }
   }
 

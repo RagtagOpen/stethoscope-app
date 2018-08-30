@@ -7,15 +7,15 @@ import openSocket from 'socket.io-client'
 import moment from 'moment'
 import prettyBytes from './lib/prettyBytes'
 import classNames from 'classnames'
-import getBadge from './lib/getBadge'
 import { HOST } from './constants'
+import { MAC } from './lib/platform'
 import appConfig from './config.json'
 import ErrorMessage from './ErrorMessage'
 import './App.css'
 
 const socket = openSocket(HOST)
 
-let platform = 'darwin'
+let platform = MAC
 let shell, ipcRenderer, log, remote
 // CRA doesn't like importing native node modules, have to use window.require AFAICT
 try {
@@ -52,15 +52,34 @@ class App extends Component {
     highlightRescan: false
   }
 
-  componentWillMount () {
+  componentWillUnmount () {
+    this.setState({ scanIsRunning: false })
+  }
+
+  async componentWillMount () {
+    ipcRenderer.send('scan:init')
     // perform the initial policy load & scan
-    this.loadPractices()
+    await this.loadPractices()
     // flag ensures the download:start event isn't sent multiple times
     this.downloadStartSent = false
+    // handle context menu
+    window.addEventListener('contextmenu', () => ipcRenderer.send('contextmenu'))
     // handle App update download progress
     ipcRenderer.on('download:progress', this.onDownloadProgress)
     // handles any errors that occur when updating (restores window size, etc.)
     ipcRenderer.on('download:error', this.onDownloadError)
+    // trigger scan from main process
+    ipcRenderer.on('autoscan:start', ({ notificationOnViolation = false }) => {
+      if (!this.state.scanIsRunning) {
+        console.log('autoscan')
+        ipcRenderer.send('scan:init')
+        if (Object.keys(this.state.policy).length) {
+          this.scan()
+        } else {
+          this.loadPractices()
+        }
+      }
+    })
     // the server emits this event when a remote scan begins
     socket.on('scan:init', this.onScanInit)
     // setup a socket io listener to refresh the app when a scan is performed
@@ -125,11 +144,11 @@ class App extends Component {
     }
 
     if (errors && errors.length) {
-      log.log({
+      log.error(JSON.stringify({
         level: 'error',
         message: 'Error scanning',
         policy: appPolicy
-      })
+      }))
 
       return this.setState({
         loading: false,
@@ -148,11 +167,7 @@ class App extends Component {
     }
 
     if (policy.validate.status !== 'PASS') {
-      const violations = Object.keys(newState.result).filter(k => newState.result[k] === 'FAIL')
-      const violationCount = violations.length > 1 ? violations.length - 1 : 1
-      ipcRenderer.send('scan:violation', getBadge(violationCount), violationCount)
-    } else {
-      ipcRenderer.send('scan:violation', getBadge(0), 0)
+      // perform action on scan violation
     }
 
     this.setState(newState, () => {
@@ -167,10 +182,13 @@ class App extends Component {
   }
 
   handleResponseError = (err = { message: 'Error requesting policy information' }) => {
-    log.error('App:response error',err)
+    log.error('App:response error', err)
     this.setState({ error: err, loading: false })
   }
-
+  /**
+   * loads config, policy, and instructions and initializes a scan
+   * using them
+   */
   loadPractices = () => {
     this.setState({ loading: true }, () => {
       const files = ['config', 'policy', 'instructions']
@@ -180,6 +198,7 @@ class App extends Component {
 
       Promise.all(promises).then(([config, policy, instructions]) => {
         this.setState({ config, policy, instructions }, () => {
+          log.info(JSON.stringify(this.state.policy))
           if (!this.state.scanIsRunning) {
             this.scan()
           }
@@ -187,16 +206,21 @@ class App extends Component {
       }).catch(this.handleResponseError)
     })
   }
-
+  /**
+   * Opens a link in the native default browser
+   */
   openExternal = event => {
     event.preventDefault()
     if (event.target.getAttribute('href')) {
       shell.openExternal(event.target.getAttribute('href'))
     }
   }
-
+  /**
+   * Performs a scan by passing the current policy to the graphql server
+   */
   scan = () => {
     this.setState({ loading: true, scanIsRunning: true }, () => {
+      console.log('scanning with policy', this.state.policy)
       Stethoscope.validate(this.state.policy).then(({ device, result }) => {
         const lastScanTime = Date.now()
         this.setState({
@@ -212,9 +236,9 @@ class App extends Component {
       }).catch(err => {
         console.log(err)
         log.error(err)
-        let message = new Error('Request timeout');
+        let message = new Error('Request timeout')
         if (err.errors) {
-          message = new Error(JSON.stringify(err.errors));
+          message = new Error(JSON.stringify(err.errors))
         }
         this.handleResponseError({ message })
       })
@@ -276,6 +300,7 @@ class App extends Component {
           <Device {...decoratedDevice}
             org={instructions.organization}
             scanResult={result}
+            strings={instructions.strings}
             policy={policy}
             lastScanTime={lastScanFriendly}
             scannedBy={scannedBy}
@@ -287,8 +312,10 @@ class App extends Component {
                 className={classNames('btn btn-default', {
                   'btn-primary': highlightRescan && result.status !== 'PASS'
                 })}
-                onClick={this.scan}>
-                <span className='icon icon-arrows-ccw' />rescan
+                onClick={this.scan}
+              >
+                <span className='icon icon-arrows-ccw' />
+                {instructions.strings.rescanButton}
               </button>
               {appConfig.stethoscopeWebURI && (
                 <button

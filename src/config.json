@@ -10,5 +10,6 @@
         "link": "https://campaignhelpdesk.org"
       }
     ]
-  }
+  },
+  "rescanIntervalSeconds": 86400
 }
