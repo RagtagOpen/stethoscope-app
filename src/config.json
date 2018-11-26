@@ -11,5 +11,6 @@
       }
     ]
   },
-  "rescanIntervalSeconds": 86400
+  "rescanIntervalSeconds": 86400,
+  "autoLaunchPrompt": true
 }
