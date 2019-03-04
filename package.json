@@ -7,7 +7,7 @@
   "description": "Local Stethoscope app",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Netflix-Skunkworks/stethoscope-app.git"
+    "url": "https://github.com/ragtagopen/stethoscope-app.git"
   },
   "main": "src/start.js",
   "build": {
