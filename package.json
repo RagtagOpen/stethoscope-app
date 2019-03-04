@@ -3,15 +3,15 @@
   "version": "3.0.3",
   "private": true,
   "homepage": "./",
-  "author": "Netflix",
+  "author": "Ragtag",
   "description": "Local Stethoscope app",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/Netflix-Skunkworks/stethoscope-app.git"
+    "type": "git",
+    "url": "https://github.com/Netflix-Skunkworks/stethoscope-app.git"
   },
   "main": "src/start.js",
   "build": {
-    "appId": "com.netflix.stethoscope-local",
+    "appId": "org.ragtag.stethoscope-local",
     "extends": null,
     "productName": "Stethoscope",
     "directories": {
@@ -19,45 +19,13 @@
     },
     "mac": {
       "category": "public.app-category.utilities",
-      "files": [
-        "kmd/**",
-        "practices/*",
-        "build/**",
-        "public/**",
-        "resolvers/**",
-        "sources/**",
-        "src/lib/**",
-        "src/*.json",
-        "src/*.js",
-        "server.js",
-        "schema.graphql"
-      ]
+      "files": ["kmd/**", "practices/*", "build/**", "public/**", "resolvers/**", "sources/**", "src/lib/**", "src/*.json", "src/*.js", "server.js", "schema.graphql"]
     },
     "win": {
       "target": "nsis",
-      "extraResources": [
-        "bitlocker-status/bitlocker-status.exe",
-        "bitlocker-status/bitlocker-status.exe.confg",
-        "bitlocker-status/bitlocker-status.pdb",
-        "bitlocker-status/Microsoft.WindowsAPICodePack.dll",
-        "bitlocker-status/Microsoft.WindowsAPICodePack.ExtendedLinguisticServices.dll",
-        "bitlocker-status/Microsoft.WindowsAPICodePack.Sensors.dll",
-        "bitlocker-status/Microsoft.WindowsAPICodePack.Shell.dll",
-        "bitlocker-status/Microsoft.WindowsAPICodePack.ShellExtensions.dll"
-      ],
-      "files": [
-        "bitlocker-status/*",
-        "practices/*",
-        "build/**",
-        "public/**",
-        "resolvers/**",
-        "sources/**",
-        "src/lib/**",
-        "src/*.json",
-        "src/*.js",
-        "server.js",
-        "schema.graphql"
-      ]
+      "extraResources": ["bitlocker-status/bitlocker-status.exe", "bitlocker-status/bitlocker-status.exe.confg", "bitlocker-status/bitlocker-status.pdb", "bitlocker-status/Microsoft.WindowsAPICodePack.dll", "bitlocker-status/Microsoft.WindowsAPICodePack.ExtendedLinguisticServices.dll", "bitlocker-status/Microsoft.WindowsAPICodePack.Sensors.dll", "bitlocker-status/Microsoft.WindowsAPICodePack.Shell.dll", "bitlocker-status/Microsoft.WindowsAPICodePack.ShellExtensions.dll"],
+      "files": ["bitlocker-status/*", "practices/*", "build/**", "public/**", "resolvers/**", "sources/**", "src/lib/**", "src/*.json", "src/*.js", "server.js", "schema.graphql"],
+      "certificateSubjectName": "Ragtag LLC"
     },
     "nsis": {
       "perMachine": true
@@ -68,35 +36,19 @@
     "linux": {
       "target": "AppImage",
       "category": "System",
-      "files": [
-        "kmd/**",
-        "practices/*",
-        "build/**",
-        "public/**",
-        "resolvers/**",
-        "sources/**",
-        "src/lib/**",
-        "src/*.json",
-        "src/*.js",
-        "server.js",
-        "schema.graphql"
-      ]
+      "files": ["kmd/**", "practices/*", "build/**", "public/**", "resolvers/**", "sources/**", "src/lib/**", "src/*.json", "src/*.js", "server.js", "schema.graphql"]
     },
     "protocols": [
       {
         "name": "stethoscope",
         "role": "Viewer",
-        "schemes": [
-          "stethoscope"
-        ]
+        "schemes": ["stethoscope"]
       }
     ]
   },
   "standard": {
     "parser": "babel-eslint",
-    "ignore": [
-      "registerServiceWorker.js"
-    ]
+    "ignore": ["registerServiceWorker.js"]
   },
   "scripts": {
     "start": "nf start -p 12000",
@@ -182,10 +134,5 @@
     "tiny-human-time": "^1.2.0",
     "webpack-dev-server": "^3.1.14"
   },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ]
+  "browserslist": [">0.2%", "not dead", "not ie <= 11", "not op_mini all"]
 }
