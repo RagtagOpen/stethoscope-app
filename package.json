@@ -3,15 +3,15 @@
   "version": "3.0.4",
   "private": true,
   "homepage": "./",
-  "author": "Netflix",
+  "author": "Ragtag",
   "description": "Local Stethoscope app",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Netflix-Skunkworks/stethoscope-app.git"
+    "url": "https://github.com/ragtagopen/stethoscope-app.git"
   },
   "main": "src/start.js",
   "build": {
-    "appId": "com.netflix.stethoscope-local",
+    "appId": "org.ragtag.stethoscope-local",
     "extends": null,
     "productName": "Stethoscope",
     "directories": {
@@ -57,7 +57,8 @@
         "src/*.js",
         "server.js",
         "schema.graphql"
-      ]
+      ],
+      "certificateSubjectName": "Ragtag LLC"
     },
     "nsis": {
       "perMachine": true
