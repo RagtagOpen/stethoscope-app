@@ -3,11 +3,11 @@
   "version": "3.1.3",
   "private": true,
   "homepage": "./",
-  "author": "Netflix",
+  "author": "Ragtag",
   "description": "Local Stethoscope app",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Netflix-Skunkworks/stethoscope-app.git"
+    "url": "https://github.com/Ragtagopen/stethoscope-app.git"
   },
   "main": "compiled/start.js",
   "standard": {
@@ -126,7 +126,7 @@
     "not op_mini all"
   ],
   "build": {
-    "appId": "com.netflix.stethoscope-local",
+    "appId": "org.ragtag.stethoscope-local",
     "extends": null,
     "productName": "Stethoscope",
     "directories": {
@@ -163,7 +163,8 @@
         "bitlocker-status/Microsoft.WindowsAPICodePack.Sensors.dll",
         "bitlocker-status/Microsoft.WindowsAPICodePack.Shell.dll",
         "bitlocker-status/Microsoft.WindowsAPICodePack.ShellExtensions.dll"
-      ]
+      ],
+      "certificateSubjectName": "Ragtag LLC"
     },
     "nsis": {
       "perMachine": true

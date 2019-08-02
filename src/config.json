@@ -3,15 +3,15 @@
     "help": [
       {
         "label": "Email Support",
-        "link": "mailto:support@your-company.com"
+        "link": "mailto:support@campaignhelpdesk.org"
       },
       {
-        "label": "Slack Support",
-        "link": "slack://channel?id=YOUR_CHANNEL_ID&team=YOUR_TEAM_ID"
+        "label": "Web Support",
+        "link": "https://www.campaignhelpdesk.org"
       }
     ]
   },
-  "rescanIntervalSeconds": 604800,
+  "rescanIntervalSeconds": 86400,
   "autoLaunchPrompt": true,
   "allowPrerelease": false
 }
