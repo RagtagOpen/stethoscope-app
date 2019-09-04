@@ -1,6 +1,6 @@
 {
   "name": "Stethoscope",
-  "version": "3.1.3-ragtag",
+  "version": "3.1.4",
   "private": true,
   "homepage": "./",
   "author": "Ragtag",
@@ -135,7 +135,7 @@
     "publish": [
       {
         "provider": "generic",
-        "url": "https://s3-us-east-1.amazonaws.com/ragtag-stethoscope/"
+        "url": "https://ragtag-stethoscope.s3.amazonaws.com/"
       }
     ],
     "files": [
