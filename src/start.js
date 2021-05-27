@@ -27,25 +27,25 @@ import initProtocols from './lib/protocolHandlers'
 import loadReactDevTools from './lib/loadReactDevTools'
 import iconFinder from './lib/findIcon'
 import startGraphQLServer from './server'
-import { IS_LINUX, IS_MAC, IS_WIN } from './lib/platform'
+import { IS_MAC, IS_WIN } from './lib/platform'
 import AutoLauncher from './AutoLauncher'
 import updateInit from './updater'
 
 const env = process.env.STETHOSCOPE_ENV || 'production'
 const findIcon = iconFinder(env)
 const IS_DEV = env === 'development'
+const IS_TEST = !!process.argv.find(arg => arg.includes('testMode'))
 const disableAutomaticScanning = settings.get('disableAutomaticScanning')
 
 let mainWindow
 let tray
-let appStartTime = Date.now()
+const appStartTime = Date.now()
 let server
 let updater
 let launchIntoUpdater = false
 let deeplinkingUrl
 let isLaunching = true
 let isFirstLaunch = false
-
 // icons that are displayed in the Menu bar
 const statusImages = {
   PASS: nativeImage.createFromPath(findIcon('scope-icon-ok2@2x.png')),
@@ -63,6 +63,7 @@ const windowPrefs = {
   webPreferences: {
     nodeIntegration: true,
     webSecurity: false,
+    contextIsolation: false,
     sandbox: false
   }
 }
@@ -82,8 +83,9 @@ const focusOrCreateWindow = (mainWindow) => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     if (mainWindow.isMinimized()) {
       mainWindow.restore()
+      return mainWindow
     }
-    mainWindow.focus()
+    mainWindow.show()
   } else {
     mainWindow = new BrowserWindow(windowPrefs)
     initMenu(mainWindow, app, focusOrCreateWindow, updater, log)
@@ -98,7 +100,6 @@ async function createWindow () {
     isFirstLaunch = true
     settings.set('userHasLaunchedApp', true)
   }
-
   // wait for process to load before hiding in dock, prevents the app
   // from flashing into view and then hiding
   if (!IS_DEV && IS_MAC) setImmediate(() => app.dock.hide())
@@ -126,15 +127,15 @@ async function createWindow () {
     isLaunching = false
   }
 
-  if (isFirstLaunch) {
+  if (isFirstLaunch && !IS_TEST) {
     dialog.showMessageBox({
       type: 'info',
       title: 'Auto Launch',
       message: 'Would you like to automatically launch Stethoscope on start-up?',
       buttons: ['Yes', 'No']
-    }, (buttonIndex) => {
-      const autoLauncher = new AutoLauncher(app.getName())
-      if (buttonIndex === 0) {
+    }).then(({ response }) => {
+      const autoLauncher = new AutoLauncher(app.name)
+      if (response === 0) {
         autoLauncher.enable()
       } else {
         autoLauncher.disable()
@@ -146,7 +147,9 @@ async function createWindow () {
   if (tray) tray.destroy()
 
   tray = new Tray(statusImages.PASS)
-  tray.on('click', () => focusOrCreateWindow(mainWindow))
+  tray.on('click', () => {
+    mainWindow = focusOrCreateWindow(mainWindow)
+  })
 
   tray.on('right-click', () => tray.popUpContextMenu(initMenu(mainWindow, app, focusOrCreateWindow, updater, log)))
 
@@ -170,8 +173,8 @@ async function createWindow () {
           title: 'Allow Access',
           message: `Will you allow your Stethoscope log files to be sent to ${origin}?`,
           buttons: ['Yes', 'No']
-        }, (buttonIndex) => {
-          if (buttonIndex === 0) {
+        }).then(({ response }) => {
+          if (response === 0) {
             resolve()
           } else {
             reject(new Error('Access denied'))
@@ -182,7 +185,7 @@ async function createWindow () {
   }
 
   // used to select the appropriate instructions file
-  const [ language ] = app.getLocale().split('-')
+  const [language] = app.getLocale().split('-')
   // start GraphQL server, close the app if 37370 is already in use
   server = await startGraphQLServer(env, log, language, appHooksForServer)
   server.on('error', error => {
@@ -213,7 +216,9 @@ async function createWindow () {
   })
 
   // adjust window height when download begins and ends
-  ipcMain.on('download:start', () => mainWindow.setSize(windowPrefs.width, 110, true))
+  ipcMain.on('download:start', () =>
+    mainWindow && mainWindow.setSize(windowPrefs.width, 110, true)
+  )
 
   // holds the setTimeout handle
   let rescanTimeout
@@ -228,7 +233,11 @@ async function createWindow () {
       clearTimeout(rescanTimeout)
       rescanTimeout = setTimeout(() => {
         if (event && event.sender) {
-          event.sender.send('autoscan:start', { notificationOnViolation: true })
+          try {
+            event.sender.send('autoscan:start', { notificationOnViolation: true })
+          } catch (e) {
+            log.error('start:[WARN] unable to run autoscan', e.message)
+          }
         }
       }, rescanDelay)
     }
@@ -236,7 +245,7 @@ async function createWindow () {
 
   // restore main window after update is downloaded (if arg = { resize: true })
   ipcMain.on('download:complete', (event, arg) => {
-    if (arg && arg.resize) {
+    if (arg && arg.resize && mainWindow) {
       mainWindow.setSize(windowPrefs.width, windowPrefs.height, true)
     }
   })
@@ -244,24 +253,17 @@ async function createWindow () {
   // wait for app to finish loading before attempting auto update from deep link (stethoscope://update)
   ipcMain.on('app:loaded', () => {
     if (String(deeplinkingUrl).indexOf('update') > -1) {
-      updater.checkForUpdates(env, mainWindow).then(err => {
-        if (err) {
-          log.error(`start:loaded:deeplink error checking for update${err}`)
-        }
-        deeplinkingUrl = ''
-      }).catch(err => {
-        deeplinkingUrl = ''
-        log.error(`start:exception on check for update ${err}`)
-      })
+      updater.forceUpdate()
+      deeplinkingUrl = ''
     }
   })
 
-  mainWindow.on('closed', () => {
-    mainWindow = null
-  })
+  if (mainWindow) {
+    mainWindow.on('closed', () => {
+      mainWindow = null
+    })
+  }
 }
-
-global.app = app
 
 function enableAppDebugger () {
   if (mainWindow) {
@@ -320,7 +322,7 @@ if (!gotTheLock) {
 }
 
 app.on('before-quit', () => {
-  let appCloseTime = Date.now()
+  const appCloseTime = Date.now()
 
   log.debug(`uptime: ${appCloseTime - appStartTime}`)
   if (server && server.listening) {
@@ -375,9 +377,7 @@ process.on('uncaughtException', err => {
 })
 
 app.on('window-all-closed', () => {
-  if (IS_LINUX) {
-    app.quit()
-  }
+  // minimize to tray
 })
 
 export {}

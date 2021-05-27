@@ -3,6 +3,7 @@ import ReactDOMServer from 'react-dom/server'
 import Accessible from './Accessible'
 import ActionIcon, { VARIANTS, VARIANT_COLORS } from './ActionIcon'
 import semver from './lib/patchedSemver'
+import getRecommendedVersion from './lib/getRecommendedVersion'
 import showdown from 'showdown'
 import Handlebars from 'handlebars/dist/handlebars.min.js'
 
@@ -28,7 +29,7 @@ class Action extends Component {
     }
   }
 
-  toggleDescription = () => {
+  handleToggleDescription = () => {
     if (!this.state.showDescription && this.props.status === 'FAIL') {
       this.props.onExpandPolicyViolation()
     }
@@ -61,15 +62,9 @@ class Action extends Component {
       return getIcon('suggested', altMessage)
     })
 
-    Handlebars.registerHelper('okIcon', label => {
-      return getIcon('done', label)
-    })
-
-    Handlebars.registerHelper('warnIcon', label => {
-      return getIcon('critical', label)
-    })
-
-    Handlebars.registerHelper('securitySetting', (key) => {
+    Handlebars.registerHelper('okIcon', label => getIcon('done', label))
+    Handlebars.registerHelper('warnIcon', label => getIcon('critical', label))
+    Handlebars.registerHelper('securitySetting', key => {
       return new Handlebars.SafeString(
         ReactDOMServer.renderToStaticMarkup(
           <table style={{ width: 'auto' }}>
@@ -87,7 +82,11 @@ class Action extends Component {
     })
 
     Handlebars.registerHelper('requirement', (key, platform) => {
-      const version = semver.coerce(policy[key][platform].ok)
+      // display the highest minimum version
+      // if advanced semver requirement is passed (e.g. >1.2.3 || < 3.0.0)
+      const { ok } = policy[key][platform]
+      const recommended = getRecommendedVersion(ok)
+
       return new Handlebars.SafeString(
         ReactDOMServer.renderToStaticMarkup(
           <table style={{ width: 'auto' }}>
@@ -95,7 +94,7 @@ class Action extends Component {
               <tr>
                 <td>Suggested version:</td>
                 <td>
-                  <span className='suggested-value'>{String(version)}</span>
+                  <span className='suggested-value'>{String(recommended)}</span>
                 </td>
               </tr>
               <tr>
@@ -111,10 +110,18 @@ class Action extends Component {
     })
   }
 
-  getPlatformAndVersionSpecificFlags (device) {
+  /**
+   * Provides variables to use in the instructions template. The returned keys
+   * can be used in conditionals in instructions.yml
+   * e.g. {{#if mojaveOrLater}}
+   * @param  {String} platform  destructed off of Device
+   * @param  {String} osVersion destructed off of Device
+   * @return {Object}
+   */
+  getPlatformAndVersionSpecificFlags ({ platform, osVersion }) {
     return {
-      mojave: (
-        device.platform === 'darwin' && semver.satisfies(device.osVersion, '>=10.14.0')
+      mojaveOrLater: (
+        platform === 'darwin' && semver.satisfies(osVersion, '>=10.14.0')
       )
     }
   }
@@ -146,14 +153,12 @@ class Action extends Component {
             <div className='description'>
               {action.description}
             </div>
-            { action.details &&
-              <pre className='description'>{action.details}</pre>
-            }
-            { action.link &&
-              <a href={action.link} target='_blank' rel='noopener noreferrer'>More info</a>
-            }
+            {action.details &&
+              <pre className='description'>{action.details}</pre>}
+            {action.link &&
+              <a href={action.link} target='_blank' rel='noopener noreferrer'>More info</a>}
           </div>
-          { action.directions && (
+          {action.directions && (
             <div
               className='instructions'
               dangerouslySetInnerHTML={{ __html: this.parseDirections() }}
@@ -170,7 +175,7 @@ class Action extends Component {
         key={String(action.title).replace(/[^a-zA-Z]+/g, '')}
         ref={el => { this.el = el }}
       >
-        <span className='title' onClick={this.toggleDescription}>
+        <span className='title' onClick={this.handleToggleDescription}>
           <ActionIcon
             className='action-icon'
             variant={this.getIconVariant(type)}
@@ -178,7 +183,7 @@ class Action extends Component {
           {this.parseTitle()}
         </span>
         <Accessible label='Toggle action description' expanded={this.state.showDescription}>
-          <a href='#toggle' className={`toggleLink show-description ${this.state.showDescription ? 'open' : 'closed'}`} onClick={this.toggleDescription}>&#9660;</a>
+          <a href='#toggle' className={`toggleLink show-description ${this.state.showDescription ? 'open' : 'closed'}`} onClick={this.handleToggleDescription}>&#9660;</a>
         </Accessible>
         {description}
       </li>

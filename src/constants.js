@@ -26,6 +26,8 @@ const DEFAULT_DARWIN_APP_PATH = '/Applications'
 const DEFAULT_WIN32_APP_PATH = '\\Program Files'
 const DEFAULT_LINUX_APP_PATH = '/usr/share'
 
+const DEFAULT_WIN32_APP_REGISTRY_PATH = 'HKLM\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall'
+
 // Application states
 const VALID = 'VALID'
 const INVALID_INSTALL_STATE = 'INVALID_INSTALL_STATE'
@@ -51,6 +53,7 @@ export {
   HOST,
   DEFAULT_DARWIN_APP_PATH,
   DEFAULT_WIN32_APP_PATH,
+  DEFAULT_WIN32_APP_REGISTRY_PATH,
   DEFAULT_LINUX_APP_PATH,
   VALID,
   INVALID_INSTALL_STATE,

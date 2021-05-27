@@ -16,6 +16,7 @@ import {
 import kmd from '../lib/kmd'
 import { PlatformSecurity } from './platform/'
 import config from '../config'
+import applicationPlatformFilter from '../lib/applicationPlatformFilter'
 
 export default {
   async automaticAppUpdates (root, args, context) {
@@ -163,9 +164,11 @@ export default {
     return UNSUPPORTED
   },
 
-  async applications (root, args, context) {
+  async applications (root, args, context, osPlatform, osVersion) {
     if ('applications' in PlatformSecurity) {
-      const results = await PlatformSecurity.applications(root, args, context)
+      const platformApps = await applicationPlatformFilter(args.applications, context, osPlatform, osVersion)
+
+      const results = await PlatformSecurity.applications(root, platformApps, context)
 
       return results.map((data, idx) => {
         const config = args.applications[idx]
@@ -216,6 +219,7 @@ export default {
           version: installed ? data.version : undefined,
           installed,
           passing: state === VALID,
+          reason: data.reason,
           state
         }
       })

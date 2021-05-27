@@ -1,11 +1,61 @@
 # Stethoscope Changelog
-
 All notable changes to this project will be documented in this file.
+
+## [5.0.1](https://github.com/Netflix-Skunkworks/stethoscope-app/tree/5.0.1)
+
+### Fixed
+- Broken semver on certain versions of Windows
+
+## [5.0.0](https://github.com/Netflix-Skunkworks/stethoscope-app/tree/v5.0.0)
+
+Fix auto update issue, caused by undocumented changes in Electron
+
+### Changed
+- stethoscope://update deep link now forces update without prompting
+
+## [4.0.2](https://github.com/Netflix-Skunkworks/stethoscope-app/tree/v4.0.2)
+
+Bug fixes
+
+### Changed
+- Config files are loaded directly by React app now, removing XHR requests.
+- Ensure window is not destroyed before autoscanning
+
+## [4.0.1](https://github.com/Netflix-Skunkworks/stethoscope-app/tree/v4.0.1)
+
+### Added
+- Now supports notarization (thanks to @cfarvidson)
+
+### Changed
+- Removed dark mode support, will add back when there is sufficient time to design the experience and/or demand for support.
+
+## [4.0.0](https://github.com/Netflix-Skunkworks/stethoscope-app/tree/v4.0.0)
+
+### Added
+- Advanced semver support (e.g. ">10.15 <=10.14.6 || 10.15.1"), allows policies to support multiple major versions
+- Dark mode support
+- Accessibility audit unit test
+
+### Fixed
+- Build issues with Catalina - updated electron-builder dependency
+- Updated vulnerable dependencies (react-scripts, webpack-server)
+- Code formatting issues
+- Loader contrast issues (a11y)
+
+### Changed
+- Moved to electron@7 and spectron@9
+
+----
 
 ## [3.1.3](https://github.com/Netflix-Skunkworks/stethoscope-app/tree/v3.1.3)
 
 ### Fixed
 - Auto update settings were defaulting to fail when they should have been defaulting to pass. Auto update is on by default, and until the preferences are changed, the settings don't exist.
+- Minor regression: DeviceID resolution for Windows and Linux
+- Build fixes for MacOS Catalina
+
+### Added:
+- Cross-platform support for applications schema
 
 ----
 
